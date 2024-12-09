@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                     if (success) {
                       if (mounted) {
-                        Navigator.pushReplacementNamed(context, '/services');
+                        Navigator.pushReplacementNamed(context, '/');
                       }
                     } else {
                       if (mounted) {
