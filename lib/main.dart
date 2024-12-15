@@ -10,8 +10,11 @@ import 'screens/buyer_screen.dart';
 import 'screens/seller_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/cart_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(
     MultiProvider(
       providers: [

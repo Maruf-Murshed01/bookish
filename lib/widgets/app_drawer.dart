@@ -33,35 +33,29 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/');
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.shopping_cart),
-            title: const Text('Buy Books'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/buyer');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.store),
-            title: const Text('Sell Books'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/seller');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.shopping_cart),
-            title: const Text('My Cart'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/cart');
-            },
-          ),
-          if (authProvider.isLoggedIn)
+          if (authProvider.isLoggedIn) ...[
             ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Services'),
+              leading: const Icon(Icons.shopping_cart),
+              title: const Text('Buy Books'),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/services');
+                Navigator.pushReplacementNamed(context, '/buyer');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.store),
+              title: const Text('Sell Books'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/seller');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.shopping_cart),
+              title: const Text('My Cart'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/cart');
+              },
+            ),
+          ],
           ListTile(
             leading: const Icon(Icons.contact_support),
             title: const Text('Contact Us'),
