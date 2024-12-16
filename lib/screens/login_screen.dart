@@ -10,11 +10,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   bool _isLogin = true;
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -27,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
     }
-    if (!value.contains('@') || !value.contains('.')) {
+    if (!value.contains('@')) {
       return 'Please enter a valid email';
     }
     return null;
@@ -37,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your password';
     }
-    if (!_isLogin && value.length < 6) {
+    if (value.length < 6) {
       return 'Password must be at least 6 characters';
     }
     return null;
@@ -50,51 +51,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    String? errorMessage;
-
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       if (_isLogin) {
-        errorMessage = await authProvider.login(
+        await authProvider.signIn(
           _emailController.text.trim(),
           _passwordController.text,
         );
       } else {
-        errorMessage = await authProvider.signup(
+        await authProvider.register(
           _emailController.text.trim(),
           _passwordController.text,
         );
       }
 
-      if (!mounted) return;
-
-      if (errorMessage == null) {
-        // Success
-        if (_isLogin) {
-          Navigator.pushReplacementNamed(context, '/');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Account created successfully! Please log in.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          setState(() {
-            _isLogin = true;
-            _emailController.clear();
-            _passwordController.clear();
-          });
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/');
       }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -104,104 +84,123 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _resetPassword() async {
-    if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email first'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      await Provider.of<AuthProvider>(context, listen: false)
-          .resetPassword(_emailController.text.trim());
-      
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset email sent. Please check your inbox.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isLogin ? 'Login' : 'Sign Up'),
+        title: Text(_isLogin ? 'Login' : 'Register'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmail,
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-                validator: _validatePassword,
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 24),
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else ...[
-                ElevatedButton(
-                  onPressed: _submitForm,
-                  child: Text(_isLogin ? 'Login' : 'Sign Up'),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: _validateEmail,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                 ),
                 const SizedBox(height: 16),
-                if (_isLogin)
-                  TextButton(
-                    onPressed: _resetPassword,
-                    child: const Text('Forgot Password?'),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
                   ),
+                  obscureText: true,
+                  validator: _validatePassword,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(_isLogin ? 'Login' : 'Register'),
+                ),
+                const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLogin = !_isLogin;
-                      _emailController.clear();
-                      _passwordController.clear();
-                    });
-                  },
-                  child: Text(_isLogin 
-                    ? 'Don\'t have an account? Sign Up'
-                    : 'Already have an account? Login'
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _isLogin = !_isLogin;
+                            _errorMessage = null;
+                          });
+                        },
+                  child: Text(
+                    _isLogin
+                        ? 'Don\'t have an account? Register'
+                        : 'Already have an account? Login',
                   ),
                 ),
+                if (_isLogin) ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            if (_emailController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please enter your email first'),
+                                ),
+                              );
+                              return;
+                            }
+                            final authProvider =
+                                Provider.of<AuthProvider>(context, listen: false);
+                            authProvider
+                                .resetPassword(_emailController.text.trim())
+                                .then((_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Password reset email sent. Please check your inbox.',
+                                  ),
+                                ),
+                              );
+                            }).catchError((error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: $error'),
+                                ),
+                              );
+                            });
+                          },
+                    child: const Text('Forgot Password?'),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

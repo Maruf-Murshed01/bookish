@@ -51,65 +51,58 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
       } catch (e) {
         print('Error setting user type: $e');
-        throw Exception('Failed to set user type');
+        rethrow;
       }
     }
   }
 
-  Future<String?> signup(String email, String password) async {
+  Future<void> signIn(String email, String password) async {
     try {
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
-      // Create user document in Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
-        'email': email,
-        'userType': '',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      
-      return null; // Success, no error message
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        return 'The password provided is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        return 'An account already exists for that email.';
-      } else {
-        return 'Error: ${e.message}';
-      }
+      _user = userCredential.user;
+      await _loadUserType();
+      notifyListeners();
     } catch (e) {
-      return 'Error: $e';
+      print('Error signing in: $e');
+      rethrow;
     }
   }
 
-  Future<String?> login(String email, String password) async {
+  Future<void> register(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return null; // Success, no error message
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        return 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
-        return 'Wrong password provided.';
-      } else {
-        return 'Error: ${e.message}';
-      }
+      _user = userCredential.user;
+      notifyListeners();
     } catch (e) {
-      return 'Error: $e';
+      print('Error registering: $e');
+      rethrow;
     }
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
-    _userType = '';
+    try {
+      await _auth.signOut();
+      _user = null;
+      _userType = '';
+      notifyListeners();
+    } catch (e) {
+      print('Error logging out: $e');
+      rethrow;
+    }
   }
 
   Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      print('Error resetting password: $e');
+      rethrow;
+    }
   }
 }

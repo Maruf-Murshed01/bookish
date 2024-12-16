@@ -10,8 +10,7 @@ class AppDrawer extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
@@ -26,55 +25,77 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Home'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
-            },
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.home),
+                  title: const Text('Home'),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                ),
+                if (authProvider.isLoggedIn) ...[
+                  ListTile(
+                    leading: const Icon(Icons.shopping_cart),
+                    title: const Text('Buy Books'),
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/buyer');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.store),
+                    title: const Text('Sell Books'),
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/seller');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.shopping_basket),
+                    title: const Text('My Cart'),
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/cart');
+                    },
+                  ),
+                ] else ...[
+                  ListTile(
+                    leading: const Icon(Icons.login),
+                    title: const Text('Login'),
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.person_add),
+                    title: const Text('Register'),
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/register');
+                    },
+                  ),
+                ],
+              ],
+            ),
           ),
-          if (authProvider.isLoggedIn) ...[
-            ListTile(
-              leading: const Icon(Icons.shopping_cart),
-              title: const Text('Buy Books'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/buyer');
-              },
+          if (authProvider.isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  await authProvider.logout();
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, '/');
+                  }
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Logout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.store),
-              title: const Text('Sell Books'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/seller');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shopping_cart),
-              title: const Text('My Cart'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/cart');
-              },
-            ),
-          ],
-          ListTile(
-            leading: const Icon(Icons.contact_support),
-            title: const Text('Contact Us'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/contact');
-            },
-          ),
-          if (authProvider.isLoggedIn) ...[
-            const Spacer(),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {
-                authProvider.logout();
-                Navigator.pushReplacementNamed(context, '/');
-              },
-            ),
-          ],
         ],
       ),
     );

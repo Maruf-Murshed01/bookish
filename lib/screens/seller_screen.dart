@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class SellerScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _SellerScreenState extends State<SellerScreen> {
   final _locationController = TextEditingController();
   String _selectedCondition = 'Like New';
   String _selectedGenre = 'Programming';
+  Book? _editingBook;
 
   @override
   void dispose() {
@@ -31,7 +34,19 @@ class _SellerScreenState extends State<SellerScreen> {
     super.dispose();
   }
 
+  void _resetForm() {
+    _editingBook = null;
+    _nameController.clear();
+    _writerController.clear();
+    _marketPriceController.clear();
+    _sellingPriceController.clear();
+    _locationController.clear();
+    _selectedCondition = 'Like New';
+    _selectedGenre = 'Programming';
+  }
+
   void _showBookDialog({Book? book}) {
+    _editingBook = book;
     if (book != null) {
       _nameController.text = book.name;
       _writerController.text = book.writerName;
@@ -41,13 +56,7 @@ class _SellerScreenState extends State<SellerScreen> {
       _selectedCondition = book.condition;
       _selectedGenre = book.genre;
     } else {
-      _nameController.clear();
-      _writerController.clear();
-      _marketPriceController.clear();
-      _sellingPriceController.clear();
-      _locationController.clear();
-      _selectedCondition = 'Like New';
-      _selectedGenre = 'Programming';
+      _resetForm();
     }
 
     showDialog(
@@ -64,33 +73,33 @@ class _SellerScreenState extends State<SellerScreen> {
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Book Name'),
                   validator: (value) =>
-                      value?.isEmpty ?? true ? 'Required field' : null,
+                      value?.isEmpty ?? true ? 'Please enter book name' : null,
                 ),
                 TextFormField(
                   controller: _writerController,
-                  decoration: const InputDecoration(labelText: 'Writer Name'),
+                  decoration: const InputDecoration(labelText: 'Author Name'),
                   validator: (value) =>
-                      value?.isEmpty ?? true ? 'Required field' : null,
+                      value?.isEmpty ?? true ? 'Please enter author name' : null,
                 ),
                 TextFormField(
                   controller: _marketPriceController,
                   decoration: const InputDecoration(labelText: 'Market Price'),
                   keyboardType: TextInputType.number,
                   validator: (value) =>
-                      value?.isEmpty ?? true ? 'Required field' : null,
+                      value?.isEmpty ?? true ? 'Please enter market price' : null,
                 ),
                 TextFormField(
                   controller: _sellingPriceController,
                   decoration: const InputDecoration(labelText: 'Selling Price'),
                   keyboardType: TextInputType.number,
                   validator: (value) =>
-                      value?.isEmpty ?? true ? 'Required field' : null,
+                      value?.isEmpty ?? true ? 'Please enter selling price' : null,
                 ),
                 TextFormField(
                   controller: _locationController,
                   decoration: const InputDecoration(labelText: 'Location'),
                   validator: (value) =>
-                      value?.isEmpty ?? true ? 'Required field' : null,
+                      value?.isEmpty ?? true ? 'Please enter location' : null,
                 ),
                 DropdownButtonFormField<String>(
                   value: _selectedCondition,
@@ -110,7 +119,7 @@ class _SellerScreenState extends State<SellerScreen> {
                 DropdownButtonFormField<String>(
                   value: _selectedGenre,
                   decoration: const InputDecoration(labelText: 'Genre'),
-                  items: ['Programming', 'Fiction', 'Science']
+                  items: ['Programming', 'Fiction', 'Non-Fiction', 'Science']
                       .map((genre) => DropdownMenuItem(
                             value: genre,
                             child: Text(genre),
@@ -128,78 +137,68 @@ class _SellerScreenState extends State<SellerScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              _resetForm();
+            },
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState!.validate()) {
                 final bookProvider = context.read<BookProvider>();
-                final newBook = Book(
-                  id: book?.id ?? DateTime.now().toString(),
+                final authProvider = context.read<AuthProvider>();
+                final userId = authProvider.userId;
+
+                if (userId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please login first')),
+                  );
+                  return;
+                }
+
+                final book = Book(
+                  id: _editingBook?.id ?? '',
                   name: _nameController.text,
                   writerName: _writerController.text,
                   marketPrice: double.parse(_marketPriceController.text),
                   sellingPrice: double.parse(_sellingPriceController.text),
                   location: _locationController.text,
                   condition: _selectedCondition,
-                  sellerId: 'seller1',
+                  sellerId: userId,
                   genre: _selectedGenre,
                 );
 
-                if (book != null) {
-                  bookProvider.updateBook(newBook);
-                } else {
-                  bookProvider.addBook(newBook);
+                try {
+                  if (_editingBook != null) {
+                    await bookProvider.updateBook(book);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Book updated successfully')),
+                      );
+                    }
+                  } else {
+                    await bookProvider.addBook(book);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Book added successfully')),
+                      );
+                    }
+                  }
+                  if (mounted) {
+                    Navigator.pop(context);
+                    _resetForm();
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
                 }
-
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      book == null
-                          ? 'Book added successfully!'
-                          : 'Book updated successfully!',
-                    ),
-                    backgroundColor: Colors.green,
-                  ),
-                );
               }
             },
-            child: Text(book == null ? 'Add Book' : 'Save Changes'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _deleteBook(Book book) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Book'),
-        content: Text('Are you sure you want to delete "${book.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<BookProvider>().deleteBook(book.id);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Book deleted successfully!'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete'),
+            child: Text(_editingBook == null ? 'Add Book' : 'Update Book'),
           ),
         ],
       ),
@@ -208,57 +207,146 @@ class _SellerScreenState extends State<SellerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final userId = authProvider.userId;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Books'),
+        title: const Text('Sell Books'),
       ),
       drawer: const AppDrawer(),
-      body: Consumer<BookProvider>(
-        builder: (context, bookProvider, child) {
-          final books = bookProvider.books;
-          return ListView.builder(
-            itemCount: books.length,
-            itemBuilder: (context, index) {
-              final book = books[index];
-              return Card(
-                margin: const EdgeInsets.all(8.0),
-                child: ListTile(
-                  title: Text(book.name),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Author: ${book.writerName}'),
-                      Text('Market Price: \$${book.marketPrice}'),
-                      Text('Selling Price: \$${book.sellingPrice}'),
-                      Text('Condition: ${book.condition}'),
-                      Text('Location: ${book.location}'),
-                    ],
-                  ),
-                  isThreeLine: true,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _showBookDialog(book: book),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        color: Colors.red,
-                        onPressed: () => _deleteBook(book),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showBookDialog(),
-        child: const Icon(Icons.add),
-      ),
+      body: userId == null
+          ? const Center(child: Text('Please login to sell books'))
+          : Consumer<BookProvider>(
+              builder: (context, bookProvider, child) {
+                return StreamBuilder<QuerySnapshot>(
+                  stream: bookProvider.getSellerBooks(userId),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final books = snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return Book.fromJson({...data, 'id': doc.id});
+                    }).toList();
+
+                    return Column(
+                      children: [
+                        Expanded(
+                          child: books.isEmpty
+                              ? const Center(
+                                  child: Text('You haven\'t added any books yet'))
+                              : ListView.builder(
+                                  itemCount: books.length,
+                                  itemBuilder: (context, index) {
+                                    final book = books[index];
+                                    return Card(
+                                      margin: const EdgeInsets.all(8.0),
+                                      child: ListTile(
+                                        title: Text(book.name),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Author: ${book.writerName}'),
+                                            Text(
+                                                'Price: \$${book.sellingPrice}'),
+                                            Text('Genre: ${book.genre}'),
+                                          ],
+                                        ),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.edit),
+                                              onPressed: () =>
+                                                  _showBookDialog(book: book),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete),
+                                              onPressed: () async {
+                                                final confirm =
+                                                    await showDialog<bool>(
+                                                  context: context,
+                                                  builder: (context) =>
+                                                      AlertDialog(
+                                                    title: const Text(
+                                                        'Delete Book'),
+                                                    content: const Text(
+                                                        'Are you sure you want to delete this book?'),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                                context, false),
+                                                        child:
+                                                            const Text('Cancel'),
+                                                      ),
+                                                      ElevatedButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                                context, true),
+                                                        child:
+                                                            const Text('Delete'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+
+                                                if (confirm == true) {
+                                                  try {
+                                                    await bookProvider
+                                                        .deleteBook(book.id);
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                              'Book deleted successfully'),
+                                                        ),
+                                                      );
+                                                    }
+                                                  } catch (e) {
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        SnackBar(
+                                                          content:
+                                                              Text('Error: $e'),
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: ElevatedButton(
+                            onPressed: () => _showBookDialog(),
+                            child: const Text('Add New Book'),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }
