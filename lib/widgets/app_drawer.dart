@@ -73,6 +73,24 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pushNamed(context, '/reviews');
                   },
                 ),
+                if (authProvider.isLoggedIn) ...[
+                  ListTile(
+                    leading: Icon(
+                      Icons.analytics,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    title: Text(
+                      'Sales Report',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/sales-report');
+                    },
+                  ),
+                ],
               ],
             ),
           ),

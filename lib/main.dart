@@ -12,6 +12,7 @@ import 'screens/contact_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/reviews_screen.dart';
+import 'screens/sales_report_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Book Resale App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
@@ -50,6 +52,7 @@ class MyApp extends StatelessWidget {
         '/contact': (ctx) => const ContactScreen(),
         '/cart': (ctx) => const CartScreen(),
         '/reviews': (ctx) => const ReviewsScreen(),
+        '/sales-report': (ctx) => const SalesReportScreen(),
       },
     );
   }
