@@ -108,4 +108,22 @@ class FirestoreService {
       throw Exception('Failed to update book: $e');
     }
   }
+
+  // Contact Messages
+  Future<void> addContactMessage({
+    required String name,
+    required String email,
+    required String message,
+  }) async {
+    try {
+      await _firestore.collection('contact_messages').add({
+        'name': name,
+        'email': email,
+        'message': message,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to send message: $e');
+    }
+  }
 }

@@ -74,6 +74,14 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                 ],
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.contact_mail),
+                  title: const Text('Contact Us'),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/contact');
+                  },
+                ),
               ],
             ),
           ),

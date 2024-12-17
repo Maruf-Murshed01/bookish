@@ -10,6 +10,7 @@ import 'screens/buyer_screen.dart';
 import 'screens/seller_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/cart_screen.dart';
+import 'screens/register_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (ctx) => const HomeScreen(),
         '/login': (ctx) => const LoginScreen(),
+        '/register': (ctx) => const RegisterScreen(),
         '/services': (ctx) => const ServicesScreen(),
         '/buyer': (ctx) => const BuyerScreen(),
         '/seller': (ctx) => const SellerScreen(),
