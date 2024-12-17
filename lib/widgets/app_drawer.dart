@@ -12,19 +12,26 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
+          if (authProvider.isLoggedIn) ...[
+            UserAccountsDrawerHeader(
+              accountName: const Text(''),  // We don't show name
+              accountEmail: Text(authProvider.userEmail ?? 'No email'),
+              currentAccountPicture: const CircleAvatar(
+                child: Icon(Icons.person),
+              ),
             ),
-            child: Center(
-              child: Text(
-                'Book Resale Platform',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+          ] else ...[
+            const DrawerHeader(
+              child: Center(
+                child: Text(
+                  'Book Resale Platform',
+                  style: TextStyle(
+                    fontSize: 24,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -36,54 +43,36 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pushReplacementNamed(context, '/');
                   },
                 ),
-                if (authProvider.isLoggedIn) ...[
-                  ListTile(
-                    leading: const Icon(Icons.shopping_cart),
-                    title: const Text('Buy Books'),
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/buyer');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.store),
-                    title: const Text('Sell Books'),
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/seller');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.shopping_cart),
-                    title: const Text('Cart'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/cart');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.rate_review),
-                    title: const Text('Book Reviews'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/reviews');
-                    },
-                  ),
-                ] else ...[
-                  ListTile(
-                    leading: const Icon(Icons.login),
-                    title: const Text('Login'),
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.person_add),
-                    title: const Text('Register'),
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/register');
-                    },
-                  ),
-                ],
-                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.shopping_cart),
+                  title: const Text('Buy Books'),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/buyer');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.store),
+                  title: const Text('Sell Books'),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/seller');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.shopping_cart),
+                  title: const Text('Cart'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/cart');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.rate_review),
+                  title: const Text('Book Reviews'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/reviews');
+                  },
+                ),
                 ListTile(
                   leading: const Icon(Icons.contact_mail),
                   title: const Text('Contact Us'),
@@ -91,28 +80,20 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pushReplacementNamed(context, '/contact');
                   },
                 ),
+                if (authProvider.isLoggedIn)
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text('Logout'),
+                    onTap: () async {
+                      await authProvider.logout();
+                      if (context.mounted) {
+                        Navigator.pushReplacementNamed(context, '/');
+                      }
+                    },
+                  ),
               ],
             ),
           ),
-          if (authProvider.isLoggedIn)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  await authProvider.logout();
-                  if (context.mounted) {
-                    Navigator.pushReplacementNamed(context, '/');
-                  }
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                ),
-              ),
-            ),
         ],
       ),
     );
