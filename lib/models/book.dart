@@ -8,6 +8,7 @@ class Book {
   final String condition;
   final String sellerId;
   final String genre;
+  int quantity;
 
   Book({
     required this.id,
@@ -19,6 +20,7 @@ class Book {
     required this.condition,
     required this.sellerId,
     required this.genre,
+    this.quantity = 1,
   });
 
   Map<String, dynamic> toJson() {
@@ -31,6 +33,7 @@ class Book {
       'condition': condition,
       'sellerId': sellerId,
       'genre': genre,
+      'quantity': quantity,
     };
   }
 
@@ -45,6 +48,7 @@ class Book {
       condition: json['condition']?.toString() ?? 'Like New',
       sellerId: json['sellerId']?.toString() ?? '',
       genre: json['genre']?.toString() ?? 'Programming',
+      quantity: json['quantity']?.toInt() ?? 1,
     );
   }
 
@@ -58,6 +62,7 @@ class Book {
     String? condition,
     String? sellerId,
     String? genre,
+    int? quantity,
   }) {
     return Book(
       id: id ?? this.id,
@@ -69,6 +74,7 @@ class Book {
       condition: condition ?? this.condition,
       sellerId: sellerId ?? this.sellerId,
       genre: genre ?? this.genre,
+      quantity: quantity ?? this.quantity,
     );
   }
 }

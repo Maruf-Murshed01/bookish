@@ -11,7 +11,10 @@ class CartProvider with ChangeNotifier {
   double _totalAmount = 0;
 
   List<Book> get cartItems => [..._cartItems];
-  double get totalAmount => _totalAmount;
+
+  double get totalAmount {
+    return _cartItems.fold(0.0, (sum, item) => sum + (item.sellingPrice * item.quantity));
+  }
 
   CartProvider() {
     _initializeStream();
@@ -68,5 +71,30 @@ class CartProvider with ChangeNotifier {
       print('Error removing from cart: $e');
       rethrow;
     }
+  }
+
+  void incrementQuantity(String bookId) {
+    final index = _cartItems.indexWhere((item) => item.id == bookId);
+    if (index != -1) {
+      _cartItems[index].quantity++;
+      notifyListeners();
+    }
+  }
+
+  void decrementQuantity(String bookId) {
+    final index = _cartItems.indexWhere((item) => item.id == bookId);
+    if (index != -1) {
+      if (_cartItems[index].quantity > 1) {
+        _cartItems[index].quantity--;
+        notifyListeners();
+      } else {
+        removeFromCart(bookId);
+      }
+    }
+  }
+
+  void clearCart() {
+    _cartItems.clear();
+    notifyListeners();
   }
 }
