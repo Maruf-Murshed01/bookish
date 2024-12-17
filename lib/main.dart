@@ -11,6 +11,7 @@ import 'screens/seller_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/reviews_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         '/seller': (ctx) => const SellerScreen(),
         '/contact': (ctx) => const ContactScreen(),
         '/cart': (ctx) => const CartScreen(),
+        '/reviews': (ctx) => const ReviewsScreen(),
       },
     );
   }

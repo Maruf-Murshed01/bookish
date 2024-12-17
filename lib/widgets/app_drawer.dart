@@ -52,10 +52,19 @@ class AppDrawer extends StatelessWidget {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.shopping_basket),
-                    title: const Text('My Cart'),
+                    leading: const Icon(Icons.shopping_cart),
+                    title: const Text('Cart'),
                     onTap: () {
-                      Navigator.pushReplacementNamed(context, '/cart');
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/cart');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.rate_review),
+                    title: const Text('Book Reviews'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/reviews');
                     },
                   ),
                 ] else ...[
