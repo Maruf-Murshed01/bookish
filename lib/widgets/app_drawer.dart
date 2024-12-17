@@ -73,27 +73,30 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pushNamed(context, '/reviews');
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.contact_mail),
-                  title: const Text('Contact Us'),
-                  onTap: () {
-                    Navigator.pushReplacementNamed(context, '/contact');
-                  },
-                ),
-                if (authProvider.isLoggedIn)
-                  ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text('Logout'),
-                    onTap: () async {
-                      await authProvider.logout();
-                      if (context.mounted) {
-                        Navigator.pushReplacementNamed(context, '/');
-                      }
-                    },
-                  ),
               ],
             ),
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.contact_mail),
+            title: const Text('Contact Us'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/contact');
+            },
+          ),
+          if (authProvider.isLoggedIn) ...[
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: () async {
+                await authProvider.logout();
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/');
+                }
+              },
+            ),
+          ],
+          const SizedBox(height: 20), // Add some padding at the bottom
         ],
       ),
     );
